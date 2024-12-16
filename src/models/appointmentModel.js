@@ -12,6 +12,11 @@ const appointmentSchema = new mongoose.Schema(
       ref: "Doctor",
       required: [true, "Doctor ID is required"],
     },
+    hospitalId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Hospital",
+      required: [true, "Hospital ID is required"],
+    },
     // hospitalId: {
     //   type: mongoose.Schema.Types.ObjectId,
     //   ref: "Hospital",

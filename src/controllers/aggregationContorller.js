@@ -7,44 +7,113 @@ import { client } from "../redis.js";
 import { CACHE_TIMEOUT } from "../constants.js";
 
 // Controller function to get doctor count by department (speciality)
+// const getDoctorDepartmentCount = async (req, res) => {
+//   try {
+//     const result = await doctorModel.aggregate([
+//       {
+//         $group: {
+//           _id: "$speciality",
+//           count: { $sum: 1 },
+//         },
+//       },
+//     ]);
+//     const key = req.originalUrl;
+//     await client.setEx(key, CACHE_TIMEOUT, JSON.stringify(result));
+//     res.status(200).json(result);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+
 const getDoctorDepartmentCount = async (req, res) => {
   try {
+    const hospitalId = req.user.hospital;
+    if (!hospitalId) {
+      return res.status(400).json({ error: "Hospital ID is required" });
+    }
     const result = await doctorModel.aggregate([
       {
-        $group: {
-          _id: "$speciality",
-          count: { $sum: 1 },
+        $match: {
+          hospitalId: hospitalId, // Filter by hospitalId
         },
       },
-    ]);
-    const key = req.originalUrl;
-    await client.setEx(key, CACHE_TIMEOUT, JSON.stringify(result));
-    res.status(200).json(result);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// Controller function to get patient count by department (disease)
-const getPatientDepartmentCount = async (req, res) => {
-  try {
-    const result = await patientModel.aggregate([
       {
         $group: {
-          _id: "$diseaseName",
-          count: { $sum: 1 },
+          _id: "$speciality", // Group by speciality
+          count: { $sum: 1 }, // Count the number of doctors
         },
       },
     ]);
 
-    const key = req.originalUrl;
-    await client.setEx(key, CACHE_TIMEOUT, JSON.stringify(result));
+    const key = req.originalUrl; // Cache key based on the endpoint
+    await client.setEx(key, CACHE_TIMEOUT, JSON.stringify(result)); // Save result to cache
 
-    res.status(200).json(result);
+    res.status(200).json(result); // Send response
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message }); // Handle errors
   }
 };
+
+
+
+// Controller function to get patient count by department (disease)
+// const getPatientDepartmentCount = async (req, res) => {
+//   try {
+//     const result = await patientModel.aggregate([
+//       {
+//         $group: {
+//           _id: "$diseaseName",
+//           count: { $sum: 1 },
+//         },
+//       },
+//     ]);
+
+//     const key = req.originalUrl;
+//     await client.setEx(key, CACHE_TIMEOUT, JSON.stringify(result));
+
+//     res.status(200).json(result);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+
+const getPatientDepartmentCount = async (req, res) => {
+  try {
+    const hospitalId = req.user.hospital; // Assuming the hospitalId is available in req.user
+    console.log(req.user);
+
+    if (!hospitalId) {
+      return res.status(400).json({ error: "Hospital ID is required" });
+    }
+
+    const result = await patientModel.aggregate([
+      {
+        $match: {
+          hospitalId: hospitalId, // Filter by hospitalId
+        },
+      },
+      {
+        $group: {
+          _id: "$diseaseName", // Group by disease name
+          count: { $sum: 1 }, // Count the number of patients
+        },
+      },
+    ]);
+
+    const key = req.originalUrl; // Cache key based on the endpoint
+    await client.setEx(key, CACHE_TIMEOUT, JSON.stringify(result)); // Save result to cache
+
+    res.status(200).json(result); // Send response
+  } catch (error) {
+    res.status(500).json({ error: error.message }); // Handle errors
+  }
+};
+
+
+
+
 
 // Controller function to get appointment count by hospital/admin
 const getAppointmentCountByHospital = async (req, res) => {
@@ -66,6 +135,8 @@ const getAppointmentCountByHospital = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
 
 // Controller function to get patient age distribution (for donut chart)
 const getPatientAgeDistribution = async (req, res) => {
@@ -161,27 +232,38 @@ const getAdmittedPatientCount = async (req, res) => {
 // Returns total patients, total doctors, and today's appointments.
 export const getSummaryStats = async (req, res) => {
   try {
+    // Get hospitalId from req.user
+    const hospitalId = req.user.hospital;
+
+    // Validate hospitalId
+    if (!hospitalId) {
+      return res.status(400).json({ message: "Hospital ID is required" });
+    }
+
+    // Fetch summary stats
     const totalPatients = await patientModel.countDocuments();
-    const totalDoctors = await doctorModel.countDocuments();
+    const totalDoctors = await doctorModel.countDocuments({ hospitalId });
     const todaysAppointments = await appointmentModel.countDocuments({
+      hospitalId,
       date: {
         $gte: new Date().setHours(0, 0, 0, 0),
         $lt: new Date().setHours(23, 59, 59, 999),
       },
     });
 
+    // Cache key and data
     const key = req.originalUrl;
-    await client.setEx(
-      key,
-      CACHE_TIMEOUT,
-      JSON.stringify({ totalPatients: count })
-    );
+    const cachedData = { totalPatients, totalDoctors, todaysAppointments };
 
-    res.json({ totalPatients, totalDoctors, todaysAppointments });
+    await client.setEx(key, CACHE_TIMEOUT, JSON.stringify(cachedData));
+
+    // Send response
+    res.json(cachedData);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Returns daily patient statistics for the current week.
 export const getPatientStatistics = async (req, res) => {
@@ -224,34 +306,76 @@ export const getPatientStatistics = async (req, res) => {
 };
 
 // Returns detailed information about today's appointments.
+// export const getTodaysAppointments = async (req, res) => {
+//   try {
+//     const today = new Date();
+//     today.setHours(0, 0, 0, 0);
+
+//     const appointments = await appointmentModel
+//       .find({
+//         date: {
+//           $gte: today,
+//           $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+//         },
+//       })
+//       .populate("patient", "name")
+//       .populate("doctor", "name")
+//       .populate("disease", "name");
+
+//     const key = req.originalUrl;
+//     await client.setEx(
+//       key,
+//       CACHE_TIMEOUT,
+//       JSON.stringify({ totalPatients: count })
+//     );
+
+//     res.json(appointments);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+
 export const getTodaysAppointments = async (req, res) => {
   try {
+    const hospitalId = req.user.hospital; // Assuming hospitalId is available in req.user
+
+    // Validate hospitalId
+    if (!hospitalId) {
+      return res.status(400).json({ message: "Hospital ID is required" });
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Fetch today's appointments filtered by hospitalId
     const appointments = await appointmentModel
       .find({
+        hospitalId, // Filter by hospitalId
         date: {
-          $gte: today,
-          $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+          $gte: today, // Start of the day
+          $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000), // End of the day
         },
       })
-      .populate("patient", "name")
-      .populate("doctor", "name")
-      .populate("disease", "name");
+      .populate("patient", "name") // Populate patient name
+      .populate("doctor", "name") // Populate doctor name
+      .populate("disease", "name"); // Populate disease name
 
-    const key = req.originalUrl;
-    await client.setEx(
-      key,
-      CACHE_TIMEOUT,
-      JSON.stringify({ totalPatients: count })
-    );
+    const key = req.originalUrl; // Cache key based on the endpoint
+    await client.setEx(key, CACHE_TIMEOUT, JSON.stringify(appointments)); // Cache the result
 
+    // Send response
     res.json(appointments);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message }); // Handle errors
   }
 };
+
+
+
+
+
+
 
 // Returns a summary of total, new, and old patients.
 export const getPatientsSummary = async (req, res) => {
@@ -279,26 +403,57 @@ export const getPatientsSummary = async (req, res) => {
 };
 
 // Returns a list of pending bills.
+// export const getPendingBills = async (req, res) => {
+//   try {
+//     const pendingBills = await billModel
+//       .find({ status: "Unpaid" })
+//       .populate("patient", "name")
+//       .populate("disease", "name")
+//       .limit(50);
+
+//     const key = req.originalUrl;
+//     await client.setEx(
+//       key,
+//       CACHE_TIMEOUT,
+//       JSON.stringify({ totalPatients: count })
+//     );
+
+//     res.json(pendingBills);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
 export const getPendingBills = async (req, res) => {
   try {
+    const hospitalId = req.user.hospital; // Assuming hospitalId is available in req.user
+
+    // Validate hospitalId
+    if (!hospitalId) {
+      return res.status(400).json({ message: "Hospital ID is required" });
+    }
+
+    // Find unpaid bills filtered by hospitalId
     const pendingBills = await billModel
-      .find({ status: "Unpaid" })
-      .populate("patient", "name")
-      .populate("disease", "name")
-      .limit(50);
+      .find({ status: "Unpaid", hospitalId }) // Filter by hospitalId and status
+      .populate("patient", "name") // Populate patient name
+      .populate("disease", "name") // Populate disease name
+      .limit(50); // Limit the results to 50 records
 
-    const key = req.originalUrl;
-    await client.setEx(
-      key,
-      CACHE_TIMEOUT,
-      JSON.stringify({ totalPatients: count })
-    );
+    const key = req.originalUrl; // Cache key based on the endpoint
+    await client.setEx(key, CACHE_TIMEOUT, JSON.stringify(pendingBills)); // Cache the result
 
+    // Send response
     res.json(pendingBills);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message }); // Handle errors
   }
 };
+
+
+
+
+
 export const ReportingAndAnalytics = async (req, res) => {
   try {
     const totalPatientCount = await patientModel.countDocuments();

@@ -1,9 +1,9 @@
-import jwt from "jsonwebtoken";
+import jwt, { decode } from "jsonwebtoken";
 import { Types } from "mongoose";
 import adminModel from "../models/adminModel.js";
 import doctorModel from "../models/doctorModel.js";
 import patientModel from "../models/patientModel.js";
-
+import recepetionistModel from '../models/receptionistmodel.js';
 export const protect = async (req, res, next) => {
   let token;
   if (
@@ -20,6 +20,8 @@ export const protect = async (req, res, next) => {
         user = await doctorModel.findById(decoded.id).select("-password");
       } else if (decoded.role === "patient") {
         user = await patientModel.findById(decoded.id).select("-password");
+      } else if (decode.role === "receptionist") {
+        user = await recepetionistModel.findById(decode.id).select("-password");
       }
 
       if (!user) {
@@ -54,6 +56,14 @@ export const doctor = (req, res, next) => {
 
 export const patient = (req, res, next) => {
   if (req.user && req.user.role === "patient") {
+    next();
+  } else {
+    res.status(403).json({ message: "Not authorized as patient" });
+  }
+};
+
+export const receptionist = (req, res, next) => {
+  if (req.user && req.user.role === "receptionist") {
     next();
   } else {
     res.status(403).json({ message: "Not authorized as patient" });

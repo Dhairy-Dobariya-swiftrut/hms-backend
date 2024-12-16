@@ -1,13 +1,6 @@
 import express from "express";
 import { protect } from "../middlewares/authMiddleware.js";
-import {
-  registerAdmin,
-  loginAdmin,
-  getProfile,
-  getAllAdmins,
-  editProfile,
-  changePassword,
-} from "../controllers/adminController.js";
+import { registerAdmin, loginAdmin, getProfile, getAllAdmins, editProfile, changePassword } from "../controllers/adminController.js";
 import { cacheMiddleware } from "../middlewares/cacheMiddleware.js";
 import upload from "../../cloudinary/multer.js";
 

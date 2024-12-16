@@ -167,6 +167,9 @@ export const resetPassword = async (req, res) => {
 //add doctor
 export const addDoctor = async (req, res) => {
   try {
+    // if (!req.user && req.user === null || req.user === '') {
+    //   return res.status(403).json({message : "UnAuthorized"});
+    // }
     // Check if doctor with this email already exists
     const existingDoctor = await doctorModel.findOne({ email: req.body.email });
     if (existingDoctor) {
@@ -188,6 +191,7 @@ export const addDoctor = async (req, res) => {
     if (imgUrlProfilePic) req.body.avatar = imgUrlProfilePic; // Assuming you want to store the profilePic path in 'avatar'
     if (imgUrlSignature) req.body.signature = imgUrlSignature; // Add signature path
     req.body.hospitalId = req.body.hospital;
+    // req.body.hospitalId = req.user?.hospital;
     req.body.hospital = null;
     const newDoctor = new doctorModel(req.body);
     await newDoctor.save();
@@ -239,7 +243,8 @@ export const getAllDoctors = async (req, res) => {
       doctors = await doctorModel.find({ hospitalId: req.user.hospital });
       // .skip(page * perPage).limit(perPage);
     } else {
-      doctors = await doctorModel.find().skip(page * perPage).limit(perPage);
+      doctors = await doctorModel.find();
+      // .skip(page * perPage).limit(perPage)
     }
     const key = req.originalUrl;
     await client.setEx(key, CACHE_TIMEOUT, JSON.stringify({ data: doctors }));

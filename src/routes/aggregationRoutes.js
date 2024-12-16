@@ -15,11 +15,13 @@ import {
   ReportingAndAnalytics,
 } from "../controllers/aggregationContorller.js";
 import { cacheMiddleware } from "../middlewares/cacheMiddleware.js";
+import { protect } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 router.get(
   "/doctors/department-count",
+  protect,
   cacheMiddleware,
   getDoctorDepartmentCount
 );
@@ -47,11 +49,11 @@ router.get(
 );
 
 //chart apis
-router.get("/summary-stats", cacheMiddleware, getSummaryStats);
+router.get("/summary-stats",protect, cacheMiddleware, getSummaryStats);
 router.get("/patient-statistics", cacheMiddleware, getPatientStatistics);
-router.get("/todays-appointments", cacheMiddleware, getTodaysAppointments);
+router.get("/todays-appointments", protect, cacheMiddleware, getTodaysAppointments);
 router.get("/patients-summary", cacheMiddleware, getPatientsSummary);
-router.get("/pending-bills", cacheMiddleware, getPendingBills);
+router.get("/pending-bills",  protect, cacheMiddleware, getPendingBills);
 
 router.get("/reporting-and-analytics", cacheMiddleware, ReportingAndAnalytics);
 export default router;

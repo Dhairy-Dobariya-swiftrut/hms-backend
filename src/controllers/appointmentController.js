@@ -124,11 +124,110 @@ export const verifyPayment = async (req, res) => {
   }
 };
 
+// export const createAppointment = async (req, res) => {
+//   try {
+//     const {
+//       doctorId,
+//       date,
+//       patient_issue,
+//       diseaseName: dieseas_name,
+//       start,
+//       country,
+//       city,
+//       state,
+//       type,
+//       hospitalId = null,
+//       razorpayPaymentId,
+//       razorpayOrderId,
+//       razorpaySignature,
+//     } = req.body;
+
+//     const patient = await patientModel.findById(req.user.id);
+
+//     // Verify payment signature
+//     const sign = razorpayOrderId + "|" + razorpayPaymentId;
+//     const expectedSign = crypto
+//       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+//       .update(sign)
+//       .digest("hex");
+
+//     // if (razorpaySignature !== expectedSign) {
+//     //   return res.status(400).json({ message: "Invalid payment signature" });
+//     // }
+
+//     // Create appointment
+//     const newAppointment = new appointmentModel({
+//       patientId: req.user.id,
+//       doctorId,
+//       date,
+//       patient_issue,
+//       dieseas_name: req.body.filteredData.diseaseName,
+//       appointmentTime: start,
+//       hospitalId,
+//       country,
+//       city,
+//       type,
+//       state,
+//       type,
+//       paymentId: razorpayPaymentId,
+//       orderId: razorpayOrderId,
+//       paymentStatus: "paid",
+//       status: "scheduled",
+//     });
+
+//     await newAppointment.save();
+//     patient.appointmentId = patient.appointmentId || [];
+//     patient.appointmentId.push(newAppointment._id);
+//     await patient.save();
+//     invalidateCache(req.user.id);
+
+//     const doctor = await doctorModel.findById(newAppointment.doctorId);
+
+//     // Send SMS Notification
+//     // Assuming `date` and `appointmentTime` are in ISO format
+//     const formattedDate = new Intl.DateTimeFormat("en-US", {
+//       year: "numeric",
+//       month: "long",
+//       day: "numeric",
+//     }).format(new Date(newAppointment.date));
+
+//     const formattedTime = new Intl.DateTimeFormat("en-US", {
+//       hour: "numeric",
+//       minute: "numeric",
+//       second: "numeric",
+//       hour12: true,
+//       timeZone: "UTC",
+//     }).format(new Date(newAppointment.appointmentTime));
+
+//     // SMS message
+//     const message = `Dear ${patient.firstName} ${patient.lastName}, your appointment with Dr. ${doctor.name} on ${formattedDate} at ${formattedTime} has been confirmed.`;
+
+//     logger.info(message);
+//     // const message = `Dear ${patient.firstName+' '+patient.lastName}, your appointment with Dr. ${doctor.name} on ${date} at ${appointmentTime} has been confirmed.`;
+//     try {
+//       await sendSMS(patient.phone, message);
+//     } catch (error) {
+//       logger.error("Failed to send SMS:", error.message);
+//     }
+
+//     res.status(201).json({
+//       message: "Appointment booked successfully",
+//       data: newAppointment,
+//     });
+//   } catch (error) {
+//     logger.error("Error:", error);
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
 export const createAppointment = async (req, res) => {
+
   try {
+    
     const {
       doctorId,
       date,
+      appointmentTime,
       patient_issue,
       diseaseName: dieseas_name,
       start,
@@ -136,20 +235,28 @@ export const createAppointment = async (req, res) => {
       city,
       state,
       type,
-      hospitalId = null,
       razorpayPaymentId,
       razorpayOrderId,
       razorpaySignature,
     } = req.body;
+    console.log(appointmentTime,"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 
     const patient = await patientModel.findById(req.user.id);
 
+    // Fetch doctor details to get the hospitalId
+    const doctor = await doctorModel.findById(doctorId);
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    const hospitalId = doctor.hospitalId; // Get hospitalId from doctor
+
     // Verify payment signature
-    const sign = razorpayOrderId + "|" + razorpayPaymentId;
-    const expectedSign = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(sign)
-      .digest("hex");
+    // const sign = razorpayOrderId + "|" + razorpayPaymentId;
+    // const expectedSign = crypto
+    //   .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+    //   .update(sign)
+    //   .digest("hex");
 
     // if (razorpaySignature !== expectedSign) {
     //   return res.status(400).json({ message: "Invalid payment signature" });
@@ -162,29 +269,29 @@ export const createAppointment = async (req, res) => {
       date,
       patient_issue,
       dieseas_name: req.body.filteredData.diseaseName,
-      appointmentTime: start,
-      hospitalId,
+      appointmentTime,
+      hospitalId, // Use hospitalId fetched from doctor
       country,
       city,
       type,
       state,
-      type,
       paymentId: razorpayPaymentId,
       orderId: razorpayOrderId,
       paymentStatus: "paid",
       status: "scheduled",
     });
-
+    
     await newAppointment.save();
+    console.log(newAppointment , "newAppointment");
+    
+    // Add appointment ID to patient model
     patient.appointmentId = patient.appointmentId || [];
     patient.appointmentId.push(newAppointment._id);
     await patient.save();
+
     invalidateCache(req.user.id);
 
-    const doctor = await doctorModel.findById(newAppointment.doctorId);
-
     // Send SMS Notification
-    // Assuming `date` and `appointmentTime` are in ISO format
     const formattedDate = new Intl.DateTimeFormat("en-US", {
       year: "numeric",
       month: "long",
@@ -199,11 +306,8 @@ export const createAppointment = async (req, res) => {
       timeZone: "UTC",
     }).format(new Date(newAppointment.appointmentTime));
 
-    // SMS message
-    const message = `Dear ${patient.firstName} ${patient.lastName}, your appointment with Dr. ${doctor.name} on ${formattedDate} at ${formattedTime} has been confirmed.`;
+    const message = `Dear ${patient.firstName} ${patient.lastName}, your appointment with Dr. ${doctor.firstName} ${doctor.lastName} on ${formattedDate} at ${formattedTime} has been confirmed.`;
 
-    logger.info(message);
-    // const message = `Dear ${patient.firstName+' '+patient.lastName}, your appointment with Dr. ${doctor.name} on ${date} at ${appointmentTime} has been confirmed.`;
     try {
       await sendSMS(patient.phone, message);
     } catch (error) {
@@ -217,12 +321,20 @@ export const createAppointment = async (req, res) => {
   } catch (error) {
     logger.error("Error:", error);
     res.status(500).json({ message: error.message });
+
   }
 };
 
+
+
+
+
+
+
+
 export const AllAppointmentsForCount = async (req, res) => {
   try {
-    let data = await appointmentModel.find({});
+    let data = await appointmentModel.find({hospitalId : req.user.hospitalId}).countDocuments();
     const key = req.originalUrl;
     await client.setEx(key, CACHE_TIMEOUT, JSON.stringify(data));
     res.json(data);
@@ -291,6 +403,8 @@ export const UpdateAppointment = async (req, res) => {
     res.status(500).json({ msg: error.message });
   }
 };
+
+
 
 // delete appointment
 export const DeleteAppointment = async (req, res) => {
