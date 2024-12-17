@@ -9,6 +9,7 @@ import patientModel from "../models/patientModel.js";
 import { loginAdmin } from "../controllers/adminController.js";
 import { loginDoctor } from "../controllers/doctorController.js";
 import { loginPatient } from "../controllers/patientController.js";
+import { loginReceptionist } from "../controllers/receptionistController.js";
 
 const router = express.Router();
 
@@ -45,6 +46,14 @@ router.post("/login", async (req, res) => {
 
     if (patient) {
       return loginPatient(req, res);
+    }
+
+    const receptionist = await receptionistModel.findOne({
+      $or: [{ email: normalizedIdentifier }, { phone: normalizedPhone }],
+    });
+
+    if (receptionist) {
+      return loginReceptionist(req, res);
     }
 
     return res.status(400).json({ message: "Invalid credentials" });

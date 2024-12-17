@@ -2,14 +2,23 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 const receptionistSchema = new mongoose.Schema(
     {
-        name: {
+        fullName: {
             type: String,
-            required: false,
+            required: true,
             trim: true,
+        },
+        email: {
+            type: String,
+            required: true,
+            trim : true
         },
         phone: {
             type: String,
             required: [false, "Phone number is required"],
+        },
+        profilePicture: {
+            type: String,
+            default: "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.istockphoto.com%2Fphotos%2Fhospital-receptionist&psig=AOvVaw2-TcpMblFc6gMaqJsDSReP&ust=1734473142688000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCNDpk6OmrYoDFQAAAAAdAAAAABAJ",
         },
         gender: {
             type: String,
@@ -77,16 +86,6 @@ const receptionistSchema = new mongoose.Schema(
         timestamps: true,
     }
 );
-// Password hashing middleware
-receptionistSchema.pre("save", async function (next) {
-    if (!this.isModified("password")) {
-        return next();
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-});
 // Method to compare password for login
 receptionistSchema.methods.matchPassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);

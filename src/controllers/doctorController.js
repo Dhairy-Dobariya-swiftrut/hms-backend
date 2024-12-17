@@ -178,18 +178,14 @@ export const addDoctor = async (req, res) => {
         .json({ message: "Doctor with this email already exists" });
     }
 
-    // Handle uploaded files
-    const imgUrlProfilePic =
-      req.files["profilePicture"] && req.files["profilePicture"][0]
-        ? req.files["profilePicture"][0].path
-        : null;
-    const imgUrlSignature =
-      req.files["signature"] && req.files["signature"][0]
-        ? req.files["signature"][0].path
-        : null;
-    // Add image paths to req.body if they exist
-    if (imgUrlProfilePic) req.body.avatar = imgUrlProfilePic; // Assuming you want to store the profilePic path in 'avatar'
-    if (imgUrlSignature) req.body.signature = imgUrlSignature; // Add signature path
+    if (req.files["profilePicture"] && req.files["profilePicture"][0]) {
+      req.body.avatar = req.files["profilePicture"][0].path; 
+    }
+
+    if (req.files["signature"] && req.files["signature"][0]) {
+      req.body.signature = req.files["signature"][0].path;
+    }
+
     req.body.hospitalId = req.body.hospital;
     // req.body.hospitalId = req.user?.hospital;
     req.body.hospital = null;

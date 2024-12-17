@@ -12,6 +12,7 @@ import patientRoutes from "../routes/patientRoutes.js";
 import adminRoutes from "../routes/adminRoutes.js";
 import hospitalRoutes from "../routes/hospitalRoutes.js";
 import doctorRoutes from "../routes/doctorRoutes.js";
+import receptionistRoutes from "../routes/receptionistRoutes.js";
 import billRoutes from "../routes/billRoutes.js";
 import universalRoutes from "../routes/universalRoutes.js";
 import aggregationRoutes from "../routes/aggregationRoutes.js";
@@ -21,10 +22,11 @@ router.use("/", universalRoutes);
 router.use("/admin", adminRoutes);
 router.use("/patient", patientRoutes);
 router.use("/doctor", doctorRoutes);
+router.use("/receptionist", receptionistRoutes);
 router.use("/hospital", hospitalRoutes);
 router.use("/bill", billRoutes);
 router.use("/insurance", insuranceRoutes); //unused
-
+router.use('/receptionist', receptionistRoutes);
 router.use("/appoinment", appoinmentRoutes);
 router.use("/prescription", prescriptionRoutes);
 router.use("/chat", chatRoutes); //socket cashing remains
