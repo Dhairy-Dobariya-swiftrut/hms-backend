@@ -14,6 +14,8 @@ router.post("/editReceptionist/:id", protect, upload.fields([
 
 router.get("/getReceptionist", protect, viewRecptionist);
 
-router.delete('/deleteReceptionist/:id', deleteReceptionist)
+router.delete('/deleteReceptionist/:id', protect, deleteReceptionist);
+
+
 
 export default router;
