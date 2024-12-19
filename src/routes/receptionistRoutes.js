@@ -4,7 +4,9 @@ import { doctor, patient, protect, receptionist } from "../middlewares/authMiddl
 import authorize from "../middlewares/roleMiddleware.js";
 import { registerPatient, editPatient, getAllPatients, getPatientById } from "../controllers/patientController.js";
 import {createAppointment , DeleteAppointment  , CancelAppointment , UpdateAppointment  , AllTodaysAppointment , AllAppointmentById , } from "../controllers/appointmentController.js";
+import { createBill,deleteBill,getBillById,getBills,getbillsByPatientId,updateBill,getInsuranceBills,} from "../controllers/bill.controller.js";
 import upload from "../../cloudinary/multer.js";
+
 const router = express.Router();
 
 router.post("/register", protect, upload.fields([
@@ -25,10 +27,20 @@ router.post("/addPatient", protect, authorize(["receptionist"]), registerPatient
 router.put("/editPatient/:id", protect, authorize(["receptionist"]), editPatient);
 
 router.post("/createAppointment", protect, authorize(["receptionist"]), createAppointment);
-router.get("/AllTodaysAppointment", protect, authorize(["receptionist"]), AllTodaysAppointment);
-router.get("/AllAppointmentById/:id", protect, authorize(["receptionist"]), AllAppointmentById);
-router.put("/UpdateAppointment/:id", protect, authorize(["receptionist"]), UpdateAppointment);
-router.put("/CancelAppointment/:id", protect, authorize(["receptionist"]), CancelAppointment);  
-router.delete("/DeleteAppointment/:id", protect, authorize(["receptionist"]), DeleteAppointment);
+router.get("/allTodaysAppointment", protect, authorize(["receptionist"]), AllTodaysAppointment);
+router.get("/allAppointmentById/:id", protect, authorize(["receptionist"]), AllAppointmentById);
+router.put("/updateAppointment/:id", protect, authorize(["receptionist"]), UpdateAppointment);
+router.put("/cancelAppointment/:id", protect, authorize(["receptionist"]), CancelAppointment);  
+router.delete("/deleteAppointment/:id", protect, authorize(["receptionist"]), DeleteAppointment);
+
+
+router.post("/createbill",protect,authorize(["receptionist"]) ,  createBill); //
+router.get("/getbill", cacheMiddleware,authorize([ "receptionist"]), getBills); //
+router.get("/getbillsById",protect,authorize(["receptionist"]),cacheMiddleware,getbillsByPatientId); //bill/getbillsById
+router.get("/getInsuranceBills",protect, cacheMiddleware, authorize(["receptionist"]), getInsuranceBills);
+router.get("/singlebill/:id", cacheMiddleware,protect, authorize(["receptionist"]), getBillById);
+router.put("/billupdate/:id",   protect, authorize(["receptionist"]), updateBill);
+router.delete("/deletebill/:id",    protect, authorize(["receptionist"]), deleteBill);
+
 
 export default router;
