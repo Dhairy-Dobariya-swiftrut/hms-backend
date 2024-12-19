@@ -36,6 +36,11 @@ const billSchema = new mongoose.Schema(
       ref: "Hospital",
       required: [true, "Hospital ID is required"],
     },
+    appointmentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Appointment",
+      required: false,
+    },
     description: {
       type: String,
       required: false,

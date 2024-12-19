@@ -221,9 +221,9 @@ export const verifyPayment = async (req, res) => {
 // };
 
 export const createAppointment = async (req, res) => {
-
   try {
     
+
     const {
       doctorId,
       date,
@@ -239,7 +239,6 @@ export const createAppointment = async (req, res) => {
       razorpayOrderId,
       razorpaySignature,
     } = req.body;
-    console.log(appointmentTime,"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 
     const patient = await patientModel.findById(req.user.id);
 
@@ -252,17 +251,22 @@ export const createAppointment = async (req, res) => {
     const hospitalId = doctor.hospitalId; // Get hospitalId from doctor
 
     // Verify payment signature
-    // const sign = razorpayOrderId + "|" + razorpayPaymentId;
-    // const expectedSign = crypto
-    //   .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-    //   .update(sign)
-    //   .digest("hex");
+    if(!req.user.role === "receptionist") {
 
-    // if (razorpaySignature !== expectedSign) {
-    //   return res.status(400).json({ message: "Invalid payment signature" });
-    // }
+      // const sign = razorpayOrderId + "|" + razorpayPaymentId;
+      // const expectedSign = crypto
+      //   .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      //   .update(sign)
+      //   .digest("hex");
+  
+      // if (razorpaySignature !== expectedSign) {
+      //   return res.status(400).json({ message: "Invalid payment signature" });
+      // }
+
+    }
 
     // Create appointment
+    
     const newAppointment = new appointmentModel({
       patientId: req.user.id,
       doctorId,
@@ -324,12 +328,6 @@ export const createAppointment = async (req, res) => {
 
   }
 };
-
-
-
-
-
-
 
 
 export const AllAppointmentsForCount = async (req, res) => {
