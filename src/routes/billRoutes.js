@@ -9,12 +9,12 @@ import {
   updateBill,
   getInsuranceBills,
 } from "../controllers/bill.controller.js";
-import authorize from "../middlewares/roleMiddleware.js";
+import authorize  from "../middlewares/roleMiddleware.js";
 import { cacheMiddleware } from "../middlewares/cacheMiddleware.js";
 const router = express.Router();
 
 // router.post("/createbill" ,upload.single('profilePic'), createBill)
-router.post("/createbill", createBill); //
+router.post("/createbill",protect,createBill); //
 router.get("/getbill", cacheMiddleware, getBills); //
 router.get(
   "/getbillsById",
@@ -23,7 +23,7 @@ router.get(
   cacheMiddleware,
   getbillsByPatientId
 ); //bill/getbillsById
-router.get("/getInsuranceBills", cacheMiddleware, getInsuranceBills);
+router.get("/getInsuranceBills",protect, cacheMiddleware, getInsuranceBills);
 router.get("/singlebill/:id", cacheMiddleware, getBillById);
 router.put("/billupdate/:id", updateBill);
 router.delete("/deletebill/:id", deleteBill);

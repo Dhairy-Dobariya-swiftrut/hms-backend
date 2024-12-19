@@ -29,9 +29,18 @@ export const createBill = async (req, res) => {
       diseaseName,
       address,
     } = req.body;
-    // //find the patient id based on the phone
-    // const patient = await patientModel.findOne({ _id:patientId });
 
+    // Check if hospitalId is available in req.user
+    if (!req.user || !req.user.hospital) {
+      return res.status(400).json({
+        success: false,
+        message: "Hospital ID is required but not provided. Ensure the user is authenticated and has a hospital assigned."
+      });
+    }
+
+    const hospitalId = req.user.hospital;
+
+    // Handle insurance details if provided
     if (insuranceCompany && insurancePlan && claimAmount && claimedAmount) {
       const newInsurance = new insuranceModel({
         patientId,
@@ -43,10 +52,8 @@ export const createBill = async (req, res) => {
       await newInsurance.save();
       req.body.insuranceId = newInsurance._id;
     }
-    // if (!billNumber || !description || !paymentType || !date || !time || !amount || !discount || !tax || !totalAmount) {
-    //     return res.status(400).json({ message: "All fields are required" });
-    //   }
 
+    // Create the new bill
     const newBill = new billModel({
       billNumber,
       phone,
@@ -65,12 +72,17 @@ export const createBill = async (req, res) => {
       tax,
       totalAmount,
       address,
+      hospitalId, // Add hospitalId here
     });
+
+    // Clear cache for relevant bill routes
     await client.del(`/bill/getbill`);
     await client.del(`/bill/getbillsById`);
     await client.del(`/bill/getInsuranceBills`);
 
+    // Save the bill to the database
     await newBill.save();
+
     res.status(201).json({
       success: true,
       data: newBill,

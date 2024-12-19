@@ -292,6 +292,8 @@ export const editDoctor = async (req, res) => {
   }
 };
 
+
+
 //delete doctor
 export const deleteDoctor = async (req, res) => {
   const { id } = req.params;

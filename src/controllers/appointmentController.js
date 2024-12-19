@@ -404,7 +404,7 @@ export const UpdateAppointment = async (req, res) => {
   }
 };
 
-
+  
 
 // delete appointment
 export const DeleteAppointment = async (req, res) => {
@@ -476,6 +476,7 @@ export const CancelAppointment = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 export const getPatientAppointmentHistory = async (req, res) => {
   try {
