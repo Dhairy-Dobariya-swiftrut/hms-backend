@@ -18,7 +18,7 @@ const receptionistSchema = new mongoose.Schema(
         },
         profilePicture: {
             type: String,
-            default: "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.istockphoto.com%2Fphotos%2Fhospital-receptionist&psig=AOvVaw2-TcpMblFc6gMaqJsDSReP&ust=1734473142688000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCNDpk6OmrYoDFQAAAAAdAAAAABAJ",
+            required : false,
         },
         gender: {
             type: String,
