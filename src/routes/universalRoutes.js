@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import adminModel from "../models/adminModel.js";
 import doctorModel from "../models/doctorModel.js";
 import patientModel from "../models/patientModel.js";
+import receptionistModel from "../models/receptionistmodel.js";
 import { loginAdmin } from "../controllers/adminController.js";
 import { loginDoctor } from "../controllers/doctorController.js";
 import { loginPatient } from "../controllers/patientController.js";
