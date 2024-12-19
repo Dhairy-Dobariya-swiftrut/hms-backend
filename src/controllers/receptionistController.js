@@ -92,7 +92,7 @@ export const editRecptionist = async (req, res) => {
         }
 
         const updatedData = {
-            email: req.body.email,
+            email: req.body.email ? req.body.email : existingReceptionist.email,
             fullName: `${req.body.firstName} ${req.body.lastName}`,
             phone: req.body.phone ? req.body.phone : existingReceptionist.phone,
             gender: req.body.gender ? req.body.gender : existingReceptionist.gender,
