@@ -6,26 +6,28 @@ import { client } from "../redis.js";
 import { CACHE_TIMEOUT } from "../constants.js";
 import registration from '../services/emailServices.js'
 import receptionistModel from "../models/receptionistmodel.js";
+import nodemailer from "nodemailer";
+import mongoose from "mongoose";
 
 export const addRecptionist = async (req, res) => {
     try {
         if (!req.body || Object.keys(req.body).length === 0 || !req.user || !req.user.hospital) {
             return res.status(400).json({ message: "Invalid request body or Unauthorized" });
         }
-
         const checkmail = await Receptionist.findOne({ email: req.body.email, hospitalId: req.user.hospital });
         if (checkmail) {
             return res.status(400).json({ message: "Email already exists" });
         }
-
-        if (req.files["profilePicture"] && req.files["profilePicture"][0]) {
-            req.body.profilePicture = req.files["profilePicture"][0].path;
+        if (req.files) {
+            if (req.files?.profilePicture?.[0]?.path) {
+                req.body.profilePicture = req.files.profilePicture[0].path;
+            }
         }
-
         const password = crypto.randomBytes(8).toString("hex");
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const data = {
+            email: req.body.email,
             fullName: `${req.body.firstName} ${req.body.lastName}`,
             phone: req.body.phone,
             gender: req.body.gender,
@@ -39,7 +41,8 @@ export const addRecptionist = async (req, res) => {
             qualification: req.body.qualification,
             emergencyContactNo: req.body.emergencyContactNo,
             workingTime: req.body.workingTime,
-            breakTime: req.body.breakTime
+            breakTime: req.body.breakTime,
+            profilePicture : req.body.profilePicture,
         };
 
         const newReceptionist = new Receptionist(data);
@@ -63,7 +66,7 @@ export const addRecptionist = async (req, res) => {
             } catch (emailError) {
                 return res.status(400).json({ message: "User registered, but email sending failed" });
             }
-
+            return res.status(200).json({ message: "receptionist registered Successfully" });
         }
     } catch (error) {
         console.error("Error adding receptionist:", error);
@@ -89,6 +92,7 @@ export const editRecptionist = async (req, res) => {
         }
 
         const updatedData = {
+            email: req.body.email,
             fullName: `${req.body.firstName} ${req.body.lastName}`,
             phone: req.body.phone ? req.body.phone : existingReceptionist.phone,
             gender: req.body.gender ? req.body.gender : existingReceptionist.gender,
@@ -103,7 +107,7 @@ export const editRecptionist = async (req, res) => {
             breakTime: req.body.breakTime ? req.body.breakTime : existingReceptionist.breakTime
         };
 
-        if (req.files["profilePicture"] && req.files["profilePicture"][0]) {
+        if (req.files["profilePicture"] && req.files["profilePicture"][0] && req.files["profilePicture"][0].path) {
             if (existingReceptionist.profilePicture) {
                 const publicId = existingReceptionist.profilePicture.split("/").pop().split(".")[0];
                 await cloudinaryConfig.uploader.destroy(`books_image/${publicId}`);
@@ -178,8 +182,7 @@ export const viewRecptionist = async (req, res) => {
         if (!req.user || !req.user.hospital) {
             return res.status(400).json({ message: "Unauthorized" });
         }
-        const receptionistId = req.query;
-
+        const receptionistId = req.query.id;
         if (receptionistId) {
             if (!mongoose.Types.ObjectId.isValid(receptionistId)) {
                 return res.status(400).json({ message: "Invalid Receptionist ID" });
@@ -188,10 +191,10 @@ export const viewRecptionist = async (req, res) => {
             if (!existingReceptionist) {
                 return res.status(404).json({ message: "Receptionist not found" });
             }
-            return res.status(200).json({ message: "Receptionist Data fetched succesfully", receptionist: existingReceptionist });
+            return res.status(200).json({ message: "Receptionist Data fetched successfully", status: 1, data: existingReceptionist });
         } else {
             const receptionists = await Receptionist.find({ hospitalId: req.user.hospital });
-            return res.status(200).json({ receptionists });
+            return res.status(200).json({ message: "Receptionist Data fetched successfully", status: 1, data: receptionists });
         }
     } catch (error) {
         console.error("Error fetching receptionist:", error);
@@ -213,9 +216,9 @@ export const deleteReceptionist = async (req, res) => {
             if (!existingReceptionist) {
                 return res.status(404).json({ message: "Receptionist not found" });
             }
-            return res.status(200).json({ message: "Receptionist Deleted Succesfully"});
+            return res.status(200).json({ message: "Receptionist Deleted Succesfully" });
         } else {
-            return res.status(400).json({ message : "Parameter(id) is missing" });
+            return res.status(400).json({ message: "Parameter(id) is missing" });
         }
     } catch (error) {
         console.error("Error fetching receptionist:", error);
