@@ -23,7 +23,7 @@ export const addRecptionist = async (req, res) => {
                 req.body.profilePicture = req.files.profilePicture[0].path;
             }
         }
-        const password = crypto.randomBytes(8).toString("hex");
+        var password = crypto.randomBytes(8).toString("hex");
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const data = {

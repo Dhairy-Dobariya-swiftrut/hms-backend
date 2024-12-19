@@ -4,9 +4,7 @@ import { protect } from "../middlewares/authMiddleware.js";
 import upload from "../../cloudinary/multer.js";
 const router = express.Router();
 
-router.post("/register", protect, upload.fields([
-    { name: "profilePicture", maxCount: 1 },
-]), addRecptionist);
+router.post("/register", protect, upload.fields([{ name: "profilePicture", maxCount: 1 }]), addRecptionist);
 
 router.post("/editReceptionist/:id", protect, upload.fields([
     { name: "profilePicture", maxCount: 1 },
