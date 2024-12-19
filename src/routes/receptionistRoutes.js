@@ -3,6 +3,7 @@ import { addRecptionist, editRecptionist, viewRecptionist, deleteReceptionist } 
 import { doctor, patient, protect, receptionist } from "../middlewares/authMiddleware.js";
 import authorize from "../middlewares/roleMiddleware.js";
 import { registerPatient, editPatient, getAllPatients, getPatientById } from "../controllers/patientController.js";
+import {createAppointment , DeleteAppointment  , CancelAppointment , UpdateAppointment  , AllTodaysAppointment , AllAppointmentById , } from "../controllers/appointmentController.js";
 import upload from "../../cloudinary/multer.js";
 const router = express.Router();
 
@@ -22,5 +23,12 @@ router.get("/getAllPatient", protect, authorize(["receptionist"]), getAllPatient
 router.get("/getPatient/:id", protect, authorize(["receptionist"]), getPatientById);
 router.post("/addPatient", protect, authorize(["receptionist"]), registerPatient);  
 router.put("/editPatient/:id", protect, authorize(["receptionist"]), editPatient);
+
+router.post("/createAppointment", protect, authorize(["receptionist"]), createAppointment);
+router.get("/AllTodaysAppointment", protect, authorize(["receptionist"]), AllTodaysAppointment);
+router.get("/AllAppointmentById/:id", protect, authorize(["receptionist"]), AllAppointmentById);
+router.put("/UpdateAppointment/:id", protect, authorize(["receptionist"]), UpdateAppointment);
+router.put("/CancelAppointment/:id", protect, authorize(["receptionist"]), CancelAppointment);  
+router.delete("/DeleteAppointment/:id", protect, authorize(["receptionist"]), DeleteAppointment);
 
 export default router;
