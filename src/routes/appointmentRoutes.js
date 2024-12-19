@@ -24,21 +24,21 @@ import { cacheMiddleware } from "../middlewares/cacheMiddleware.js";
 
 const router = express.Router();
 
-router.post("/appoinmentcreate", protect, authorize(["patient", "doctor"]), createAppointment);
+router.post("/appoinmentcreate", protect, authorize(["patient", "doctor" ,"receptionist"]), createAppointment);
 router.get("/appointment-fee", protect, cacheMiddleware, appointmentFee);
-router.get("/allappoinment", protect, cacheMiddleware, authorize(["patient", "doctor", "admin"]), AllAppointment);
-router.get("/allAppointmentsForCount", cacheMiddleware, protect, authorize(["patient", "doctor", "admin"]), AllAppointmentsForCount);
+router.get("/allappoinment", protect, cacheMiddleware, authorize(["patient", "doctor", "admin" ,"receptionist"]), AllAppointment);
+router.get("/allAppointmentsForCount", cacheMiddleware, protect, authorize(["patient", "doctor", "admin" ]), AllAppointmentsForCount);
 router.get("/allpatient", protect, cacheMiddleware, authorize(["patient", "doctor"]), allpatient);
-router.get("/alltodayappoinment", protect, cacheMiddleware, authorize(["patient", "doctor", "admin"]), AllTodaysAppointment);
-router.get("/getAllAppointmentById/:id", protect, cacheMiddleware, authorize(["patient", "doctor", "admin"]), AllAppointmentById);
+router.get("/alltodayappoinment", protect, cacheMiddleware, authorize(["patient", "doctor", "admin" ,"receptionist"]), AllTodaysAppointment);
+router.get("/getAllAppointmentById/:id", protect, cacheMiddleware, authorize(["patient", "doctor", "admin" ,"receptionist"]), AllAppointmentById);
 router.get("/Patient_Appointment_History/:PatientID", protect, cacheMiddleware, authorize(["patient", "doctor"]), getPatientAppointmentHistory);
 router.get("/Doctor_Appointment_History/:id", protect, cacheMiddleware, authorize(["patient", "doctor"]), getDoctorAppointmentHistory);
-router.get("/singleappointment/:id", protect, cacheMiddleware, authorize(["patient", "doctor"]), SingleAppoiment);
+router.get("/singleappointment/:id", protect, cacheMiddleware, authorize(["patient", "doctor "]), SingleAppoiment);
 router.get("/singlepatient/:id", protect, cacheMiddleware, authorize(["patient", "doctor"]), singlepatient);
 router.get("/appoinmentDone/:id", protect, cacheMiddleware, appoinmentDone);
-router.put("/updateappointment/:id", protect, authorize(["patient", "doctor"]), UpdateAppointment);
-router.put("/cancelappointment/:id", protect, authorize(["patient", "doctor"]), CancelAppointment);
-router.delete("/deleteappointment/:id", protect, authorize(["patient", "doctor"]), DeleteAppointment);
+router.put("/updateappointment/:id", protect, authorize(["patient", "doctor ,receptionist"]), UpdateAppointment);
+router.put("/cancelappointment/:id", protect, authorize(["patient", "doctor , receptionist"]), CancelAppointment);
+router.delete("/deleteappointment/:id", protect, authorize(["patient", "doctor , receptionist"]), DeleteAppointment);
 router.post("/create-razorpay-order", protect, createRazorpayOrder);
 router.post("/verify-payment", protect, verifyPayment);
 
