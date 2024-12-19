@@ -16,13 +16,7 @@ const router = express.Router();
 // router.post("/createbill" ,upload.single('profilePic'), createBill)
 router.post("/createbill",protect,createBill); //
 router.get("/getbill", cacheMiddleware, getBills); //
-router.get(
-  "/getbillsById",
-  protect,
-  authorize(["patient", "doctor"]),
-  cacheMiddleware,
-  getbillsByPatientId
-); //bill/getbillsById
+router.get("/getbillsById",protect,authorize(["patient", "doctor"]),cacheMiddleware,getbillsByPatientId); //bill/getbillsById
 router.get("/getInsuranceBills",protect, cacheMiddleware, getInsuranceBills);
 router.get("/singlebill/:id", cacheMiddleware, getBillById);
 router.put("/billupdate/:id", updateBill);
