@@ -6,6 +6,7 @@ import { registerPatient, editPatient, getAllPatients, getPatientById } from "..
 import {createAppointment , DeleteAppointment  , CancelAppointment , UpdateAppointment  , AllTodaysAppointment , AllAppointmentById , } from "../controllers/appointmentController.js";
 import { createBill,deleteBill,getBillById,getBills,getbillsByPatientId,updateBill,getInsuranceBills,} from "../controllers/bill.controller.js";
 import upload from "../../cloudinary/multer.js";
+import { cacheMiddleware } from "../middlewares/cacheMiddleware.js";
 
 const router = express.Router();
 
@@ -27,11 +28,11 @@ router.post("/addPatient", protect, authorize(["receptionist"]), registerPatient
 router.put("/editPatient/:id", protect, authorize(["receptionist"]), editPatient);
 
 router.post("/createAppointment", protect, authorize(["receptionist"]), createAppointment);
-router.get("/allTodaysAppointment", protect, authorize(["receptionist"]), AllTodaysAppointment);
-router.get("/allAppointmentById/:id", protect, authorize(["receptionist"]), AllAppointmentById);
-router.put("/updateAppointment/:id", protect, authorize(["receptionist"]), UpdateAppointment);
-router.put("/cancelAppointment/:id", protect, authorize(["receptionist"]), CancelAppointment);  
-router.delete("/deleteAppointment/:id", protect, authorize(["receptionist"]), DeleteAppointment);
+router.get("/allTodaysAppointment",cacheMiddleware, protect, authorize(["receptionist"]), AllTodaysAppointment);
+router.get("/allAppointmentById/:id",cacheMiddleware, protect, authorize(["receptionist"]), AllAppointmentById);
+router.put("/updateAppointment/:id",cacheMiddleware, protect, authorize(["receptionist"]), UpdateAppointment);
+router.put("/cancelAppointment/:id",cacheMiddleware,  protect, authorize(["receptionist"]), CancelAppointment);  
+router.delete("/deleteAppointment/:id",cacheMiddleware, protect, authorize(["receptionist"]), DeleteAppointment);
 
 
 router.post("/createbill",protect,authorize(["receptionist"]) ,  createBill); //
