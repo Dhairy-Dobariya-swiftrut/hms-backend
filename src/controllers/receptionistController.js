@@ -23,7 +23,7 @@ export const addRecptionist = async (req, res) => {
                 req.body.profilePicture = req.files.profilePicture[0].path;
             }
         }
-        const password = crypto.randomBytes(8).toString("hex");
+        var password = crypto.randomBytes(8).toString("hex");
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const data = {
@@ -55,7 +55,7 @@ export const addRecptionist = async (req, res) => {
                     secure: true,
                     auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
                 });
-                const htmlMessage = registration(req.body.fullName, req.body.email, newReceptionist.password);
+                const htmlMessage = registration(req.body.fullName, req.body.email, password);
                 await transporter.sendMail({
                     from: process.env.EMAIL_USER,
                     to: req.body.email,
